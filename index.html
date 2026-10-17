@@ -1463,7 +1463,7 @@
         { id: 27, name: "Almat abi", rating: 5, goals: 0, assists: 0, mvp: 0 },
         { id: 28, name: "Serzhan agay", rating: 2.75, goals: 0, assists: 0, mvp: 0 }
     ];
-    initialPlayers.forEach(p => { p.roster = '10B'; });
+    initialPlayers.forEach(p => { p.roster = '10B'; p.statsReset = 1; });
 
     // ================= ACCESS CONTROL =================
     // Viewers can see the whole tournament, but only an authenticated admin
@@ -2441,6 +2441,19 @@ function shareCard(ctx, x, y, w, h, r = 28, fill = '#fff') {
                 await saveData();
             }
 
+            // One-time full stats wipe: goals, assists, MVP, All Time, History and the
+            // current tournament are cleared for everyone. Players keep names and ratings.
+            if (!playersData.some(p => p.statsReset)) {
+                playersData.forEach(p => { p.goals = 0; p.assists = 0; p.mvp = 0; p.statsReset = 1; });
+                activeTeams = [];
+                activeMatches = [];
+                currentDisplayedRound = 1;
+                lastRemoteRound = 1;
+                totalRounds = 0;
+                allTimeStats = {};
+                await saveData();
+            }
+
             baseCycleRounds = activeTeams.length ? buildBaseCycleSchedule(activeTeams) : [];
         } else {
             await saveData();
@@ -2579,6 +2592,7 @@ function shareCard(ctx, x, y, w, h, r = 28, fill = '#fff') {
             name,
             rating:Number.isFinite(rating)?Math.max(0,Math.min(10,rating)):3,
             roster:'10B',
+            statsReset:1,
             goals:0,
             assists:0,
             mvp:0
